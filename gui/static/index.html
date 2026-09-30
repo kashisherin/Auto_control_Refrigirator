@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predictive Adaptive Refrigeration Control System</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">❄️</div>
+      <div>
+        <h1 class="brand-title">Refrigeration Control Suite</h1>
+        <p class="brand-subtitle">Predictive Adaptive Thermal Plant Control & Disturbance Simulation</p>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button id="alarm-mute-btn" class="btn-secondary" style="padding: 0.4rem 0.9rem; border-color: rgba(249, 115, 22, 0.4);">
+        <span>🔊 Alarm: ON</span>
+      </button>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="controller-val">PID Controller Active</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Grid -->
+  <main class="dashboard-grid">
+
+    <!-- Left Column: Visual Refrigerator Model & Interactive Controls -->
+    <section class="left-panel">
+
+      <!-- 3D Refrigerator Chamber Viewport -->
+      <div class="card">
+        <h2 class="card-title">
+          <span>🧊</span> Interactive Physical Chamber
+        </h2>
+
+        <div class="fridge-container">
+          <div class="fridge-chassis">
+            <div class="cooling-coils"></div>
+
+            <!-- Internal Chamber -->
+            <div class="fridge-chamber cold" id="fridge-chamber">
+              <div class="frost-mist"></div>
+              <div class="shelf"></div>
+              <div class="shelf"></div>
+              <div class="shelf"></div>
+            </div>
+
+            <!-- Hinged Door -->
+            <div class="fridge-door" id="fridge-door">
+              <div class="door-badge">COLD ROOM</div>
+              <div class="door-handle"></div>
+            </div>
+
+            <!-- Compressor & Fan Base -->
+            <div class="compressor-unit">
+              <div style="font-size: 0.75rem; color: var(--text-muted);">COMPRESSOR POWER</div>
+              <div class="fan-icon spinning" id="compressor-fan">🌀</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Door Toggle Button -->
+        <button id="door-toggle-btn" class="door-toggle-btn is-closed">
+          <span>🚪 OPEN REFRIGERATOR DOOR</span>
+        </button>
+        <p id="door-status-text" style="font-size: 0.8rem; text-align: center; margin-top: 0.6rem; color: var(--accent-success);">
+          DOOR CLOSED (Insulated)
+        </p>
+      </div>
+
+      <!-- Controller Selection Panel -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <h2 class="card-title">
+          <span>⚙️</span> Control Algorithm Selection
+        </h2>
+        <div class="controller-selector">
+          <button class="chip-btn active" data-controller="auto" style="border-color: var(--accent-blue); background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(168, 85, 247, 0.2)); font-weight: 700;">
+            <span>🤖 AUTO (Smart Energy Optimizer)</span>
+            <span class="chip-badge" style="background: var(--accent-blue); color: #0b0f19;">RECOMMENDED</span>
+          </button>
+          <button class="chip-btn" data-controller="open_loop">
+            <span>Open-Loop (Fixed Power)</span>
+            <span class="chip-badge">Phase 1</span>
+          </button>
+          <button class="chip-btn" data-controller="on_off">
+            <span>ON/OFF Bang-Bang</span>
+            <span class="chip-badge">Phase 4</span>
+          </button>
+          <button class="chip-btn" data-controller="pid">
+            <span>Standard PID</span>
+            <span class="chip-badge">Phase 5</span>
+          </button>
+          <button class="chip-btn" data-controller="adaptive_pid">
+            <span>Adaptive PID (Gain Scheduled)</span>
+            <span class="chip-badge">Phase 8</span>
+          </button>
+          <button class="chip-btn" data-controller="predictive">
+            <span>Predictive MPC</span>
+            <span class="chip-badge">Phase 9+</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Operating Parameters Card -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <h2 class="card-title">
+          <span>🎛️</span> Parameter Tuning
+        </h2>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <span>Target Setpoint (°C)</span>
+            <span id="setpoint-slider-disp" style="font-weight: 700; color: var(--accent-blue);">-18.0 °C</span>
+          </div>
+          <input type="range" id="setpoint-slider" class="custom-range" min="-30" max="5" step="0.5" value="-18">
+        </div>
+
+        <div class="slider-group" style="margin-top: 1rem;">
+          <div class="slider-header">
+            <span>Ambient Room Temp (°C)</span>
+            <span id="ambient-slider-disp" style="font-weight: 700; color: var(--accent-heat);">25.0 °C</span>
+          </div>
+          <input type="range" id="ambient-slider" class="custom-range" min="10" max="45" step="0.5" value="25">
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Right Column: Real-time Telemetry, Graphs & Intelligent Assistant Panel -->
+    <section class="right-panel">
+
+      <!-- Intelligent Door Heat-Exchange & Alert Panel (Special Feature) -->
+      <div class="card" style="border-color: rgba(56, 189, 248, 0.3); background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(17, 24, 39, 0.85));">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="card-title" style="margin-bottom: 0;">
+            <span>🤖</span> Intelligent Thermal Assistant
+          </h2>
+          <div id="alert-banner" class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-success); border-color: rgba(16, 185, 129, 0.3); font-size: 0.95rem; padding: 0.5rem 1rem;">
+            <span>✓ NORMAL</span>
+          </div>
+        </div>
+
+        <p id="alert-message" style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+          System operating within safe thermal parameters.
+        </p>
+
+        <!-- Intelligent Thermal Metrics Readouts -->
+        <div class="telemetry-grid">
+          <div class="metric-box">
+            <div class="metric-label">DOOR STATUS</div>
+            <div class="metric-value" id="intel-door-status" style="font-size: 1.3rem;">CLOSED</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);" id="intel-door-timer">0.0 s open</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-label">ESTIMATED HEAT EXCHANGE</div>
+            <div class="metric-value" id="intel-q-est" style="font-size: 1.3rem; color: var(--accent-heat);">0.0 W</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);" id="intel-load-cat">Load: LOW</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-label">COOLING REQUIREMENT</div>
+            <div class="metric-value" id="intel-cooling-req" style="font-size: 1.3rem; color: var(--accent-purple);">0 %</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);" id="intel-comp-boost">+0 W Feedforward</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-label">SEVERITY SCORE</div>
+            <div class="metric-value" id="intel-severity-score" style="font-size: 1.3rem; color: var(--accent-blue);">0.0 / 100</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telemetry Metric Readout Cards -->
+      <div class="telemetry-grid" style="margin-top: 1.5rem;">
+        <div class="metric-box">
+          <div class="metric-label">Chamber Temperature</div>
+          <div class="metric-value" style="color: var(--accent-blue);">
+            <span id="temp-val">25.00</span><span class="metric-unit">°C</span>
+          </div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-label">Target Setpoint</div>
+          <div class="metric-value">
+            <span id="setpoint-val">-18.0 °C</span>
+          </div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-label">Compressor Cooling Power</div>
+          <div class="metric-value" style="color: var(--accent-purple);">
+            <span id="power-val">344</span><span class="metric-unit">W</span>
+          </div>
+        </div>
+
+        <div class="metric-box">
+          <div class="metric-label">Duty Cycle / Time</div>
+          <div class="metric-value" style="font-size: 1.25rem;">
+            <span id="duty-val">100.0%</span>
+            <div style="font-size: 0.8rem; color: var(--text-muted);" id="time-val">0.0 min</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Telemetry Graph -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 class="card-title" style="margin-bottom: 0;">
+            <span>📈</span> Real-Time Temperature & Compressor Response
+          </h2>
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="play-pause-btn" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <span>⏸ PAUSE</span>
+            </button>
+            <button id="fast-step-btn" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <span>⚡ +60s STEP</span>
+            </button>
+            <button id="reset-btn" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <span>🔄 RESET</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="chart-wrapper">
+          <canvas id="telemetry-chart"></canvas>
+        </div>
+
+        <div class="sim-controls-row">
+          <button id="run-batch-btn" class="door-toggle-btn is-open" style="font-size: 0.95rem; padding: 0.8rem;">
+            <span>⏩ RUN FULL 200-MIN SIMULATION BATCH</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Engineering Debug & Physical Model Audit Panel -->
+      <div class="card" style="margin-top: 1.5rem; border-color: rgba(168, 85, 247, 0.4); background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.9));">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="card-title" style="margin-bottom: 0;">
+            <span>🔬</span> Physical Thermal Energy Balance Debug Panel
+          </h2>
+          <span style="font-size: 0.75rem; color: var(--accent-purple); font-family: var(--font-mono);">C·dT/dt = Q_in - Q_cooling</span>
+        </div>
+
+        <div class="telemetry-grid">
+          <div class="metric-box">
+            <div class="metric-label">TEMP ERROR (T - T_set)</div>
+            <div class="metric-value" id="debug-error-val" style="font-size: 1.1rem; color: var(--accent-blue);">0.00 °C</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">TEMP RATE (dT/dt)</div>
+            <div class="metric-value" id="debug-dtdt-val" style="font-size: 1.1rem; color: var(--text-primary);">0.000 °C/s</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">TOTAL HEAT LOAD (Q_in)</div>
+            <div class="metric-value" id="debug-qin-val" style="font-size: 1.1rem; color: var(--accent-heat);">344.0 W</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">NET HEAT FLUX (Q_net)</div>
+            <div class="metric-value" id="debug-qnet-val" style="font-size: 1.1rem; color: var(--accent-purple);">0.0 W</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intelligent Event Log & Performance Analytics -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="card-title" style="margin-bottom: 0;">
+            <span>📋</span> Intelligent Event Log & Performance Analytics
+          </h2>
+          <button id="export-csv-btn" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+            <span>📥 EXPORT CSV LOG</span>
+          </button>
+        </div>
+
+        <!-- Event Log Table -->
+        <div style="max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid var(--border-card); margin-bottom: 1.5rem;">
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th style="width: 120px;">Timestamp</th>
+                <th style="width: 100px;">Sim Time</th>
+                <th>System Log Event</th>
+              </tr>
+            </thead>
+            <tbody id="event-log-tbody">
+              <tr>
+                <td colspan="3" style="text-align: center; color: var(--text-muted);">No system events logged yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Current Run Result</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Mean Absolute Error (MAE)</td>
+              <td id="metric-mae" style="font-weight: 700; color: var(--accent-blue);">--</td>
+              <td>Average temperature deviation from setpoint</td>
+            </tr>
+            <tr>
+              <td>Root Mean Square Error (RMSE)</td>
+              <td id="metric-rmse" style="font-weight: 700; color: var(--accent-blue);">--</td>
+              <td>Sensitivity to large transient spikes</td>
+            </tr>
+            <tr>
+              <td>Total Energy Consumption</td>
+              <td id="metric-energy" style="font-weight: 700; color: var(--accent-purple);">--</td>
+              <td>Accumulated energy spent by compressor</td>
+            </tr>
+            <tr>
+              <td>Peak Temperature Spike</td>
+              <td id="metric-peak" style="font-weight: 700; color: var(--accent-heat);">--</td>
+              <td>Maximum temperature reached during door disturbance</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- JavaScript Modules -->
+  <script src="/js/refrigerator_3d.js"></script>
+  <script src="/js/charts.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

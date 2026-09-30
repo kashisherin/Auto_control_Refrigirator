@@ -1,0 +1,16 @@
+# ---------------------------------------------------------------------
+# Phase 1 needs only these three:
+# ---------------------------------------------------------------------
+numpy>=1.26
+pandas>=2.2
+matplotlib>=3.8
+
+# ---------------------------------------------------------------------
+# Not needed until later phases -- listed here so the file matches the
+# full project architecture (Section 12/15). Installing them now is
+# fine, but not required to run main_phase1.py.
+# ---------------------------------------------------------------------
+scipy>=1.12          # Phase 6+: metrics, signal processing
+control>=0.10         # Phase 9+: state-space / classical-control tools (python-control)
+scikit-learn>=1.4     # Phase 10+: thermal-load / temperature prediction
+PySide6>=6.6           # Phase 7+: desktop GUI
